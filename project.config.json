@@ -5,6 +5,7 @@
   "compileType": "miniprogram",
   "miniprogramRoot": "./",
   "srcMiniprogramRoot": "./",
+  "cloudfunctionRoot": "cloudfunctions/",
   "setting": {
     "es6": true,
     "enhance": true,
@@ -36,15 +37,16 @@
   "packOptions": {
     "ignore": [
       {
-        "type": "file",
-        "value": "tanmu-editor.html"
+        "value": "tanmu-editor.html",
+        "type": "file"
       },
       {
-        "type": "file",
-        "value": "README.md"
+        "value": "README.md",
+        "type": "file"
       }
     ],
     "include": []
   },
-  "editorSetting": {}
+  "editorSetting": {},
+  "cloudfunctionTemplateRoot": "cloudfunctionTemplate/"
 }

@@ -1,5 +1,6 @@
 const STORAGE_STATE_KEY = "tanmu_editor_state_v2";
 const STORAGE_STYLES_KEY = "tanmu_editor_saved_styles_v2";
+const usageStats = require("../../utils/usage-stats");
 
 const COLORS = {
   lime: "#d4ff25",
@@ -164,14 +165,6 @@ const SCENE_BADGE_COPY = {
   festival: "节庆预览"
 };
 
-const SCENE_DELIGHT_TOASTS = {
-  concert: ["看台灯牌，亮度拉满", "应援现场，准备上场"],
-  bar: ["霓虹场域已点亮", "低照环境，荧光更醒目"],
-  esports: ["冷光高对比，看台可读", "赛博应援，节奏拉满"],
-  confession: ["柔光告白，情绪到位", "近景灯牌，温柔发光"],
-  festival: ["户外夜场，暖色冲击", "节庆节奏，口号更亮"]
-};
-
 const SAVE_DELIGHT_TOASTS = [
   "灯牌已存档，下一场接着用",
   "样式收好了，随时再度上场",
@@ -189,19 +182,14 @@ function pickRandom(list) {
   return list[Math.floor(Math.random() * list.length)];
 }
 
-function getSceneDelightToast(sceneKey) {
-  const pool = SCENE_DELIGHT_TOASTS[sceneKey];
-  if (pool && pool.length) return pickRandom(pool);
-  const scene = SCENES[sceneKey];
-  return scene ? `已切换到${scene.label}` : "场景已更新";
-}
-
 function getColorDelightToast(colorKey) {
   const label = COLOR_LABELS[colorKey] || "配色";
   return `${label}已上身`;
 }
 
 const FULLSCREEN_BRIGHTNESS = 1;
+const FULLSCREEN_CONTROLS_HIDE_MS = 3200;
+const FULLSCREEN_PAGE_STYLE = "overflow:hidden;background-color:#05070b;";
 const CUSTOM_SLIDER_THUMB_RPX = 44;
 const FULLSCREEN_ZOOM_MIN = 0.55;
 const FULLSCREEN_ZOOM_MAX = 2.2;
@@ -540,6 +528,13 @@ Page({
     speedSliderThumbStyle: "left:0rpx;",
     showPinchGuide: false,
     pinchGuideVisible: false,
+    usageText: "",
+    usageLoading: true,
+    usageReady: false,
+    usageError: false,
+    usagePulse: false,
+    fullscreenControlsVisible: false,
+    fullscreenPageStyle: "",
     ...getLayoutMetrics()
   },
 
@@ -562,6 +557,26 @@ Page({
     if (next.isKeepScreenOn) {
       wx.setKeepScreenOn({ keepScreenOn: true });
     }
+
+    this.bootstrapUsageBanner();
+    this.startUsageRealtime();
+  },
+
+  onShow() {
+    if (this.data.isFullscreen) {
+      this.scheduleHideCapsuleChrome();
+    }
+
+    this.startUsageRealtime();
+
+    if (this._usageShowTimer) {
+      clearTimeout(this._usageShowTimer);
+    }
+
+    this._usageShowTimer = setTimeout(() => {
+      this._usageShowTimer = null;
+      this.reportUsage();
+    }, 200);
   },
 
   onReady() {
@@ -573,6 +588,7 @@ Page({
   },
 
   onHide() {
+    usageStats.stopUsageWatch();
     this.flushPersist();
     if (this.data.isFullscreen) {
       this.restoreScreenBrightness();
@@ -580,6 +596,21 @@ Page({
   },
 
   onUnload() {
+    usageStats.stopUsageWatch();
+
+    if (this._usageShowTimer) {
+      clearTimeout(this._usageShowTimer);
+      this._usageShowTimer = null;
+    }
+
+    if (this._usagePulseTimer) {
+      clearTimeout(this._usagePulseTimer);
+      this._usagePulseTimer = null;
+    }
+
+    this.clearFullscreenControlsTimer();
+    this.clearHideCapsuleTimers();
+
     if (this._fullscreenEnterTimer) {
       clearTimeout(this._fullscreenEnterTimer);
       this._fullscreenEnterTimer = null;
@@ -606,6 +637,107 @@ Page({
       title: `${this.data.sceneLabel} · ${this.data.text}`,
       path: "/pages/tanmu-editor/index"
     };
+  },
+
+  bootstrapUsageBanner() {
+    const cachedCount = usageStats.readCachedCount();
+    const cachedText = usageStats.formatUsageCount(cachedCount);
+
+    if (cachedText) {
+      this.setData({
+        usageText: cachedText,
+        usageLoading: true,
+        usageReady: false,
+        usageError: false
+      });
+    }
+  },
+
+  startUsageRealtime() {
+    usageStats.startUsageWatch((count, text) => {
+      if (!text || text === this.data.usageText) return;
+
+      this.setData({
+        usageText: text,
+        usagePulse: true,
+        usageLoading: false,
+        usageReady: true,
+        usageError: false
+      });
+
+      if (this._usagePulseTimer) {
+        clearTimeout(this._usagePulseTimer);
+      }
+
+      this._usagePulseTimer = setTimeout(() => {
+        this._usagePulseTimer = null;
+        this.setData({ usagePulse: false });
+      }, 520);
+    });
+  },
+
+  applyUsageCount(count) {
+    const text = usageStats.formatUsageCount(count);
+    if (!text) return;
+
+    this.setData({
+      usageText: text,
+      usageLoading: false,
+      usageReady: true,
+      usageError: false,
+      usagePulse: false
+    });
+  },
+
+  applyUsageFailure(error) {
+    const cachedCount = usageStats.readCachedCount();
+    const cachedText = usageStats.formatUsageCount(cachedCount);
+    console.error("[usageCounter] 上报使用次数失败", error);
+
+    if (cachedText) {
+      this.setData({
+        usageText: cachedText,
+        usageLoading: false,
+        usageReady: true,
+        usageError: false
+      });
+      return;
+    }
+
+    this.setData({
+      usageText: "",
+      usageLoading: false,
+      usageReady: false,
+      usageError: true
+    });
+  },
+
+  handleUsageBannerTap() {
+    if (this.data.usageError || this.data.usageLoading || !this.data.usageText) {
+      this.reportUsage({ force: true });
+    }
+  },
+
+  reportUsage(options = {}) {
+    if (this._usageReporting && !options.force) return;
+
+    this._usageReporting = true;
+    this.setData({
+      usageLoading: true,
+      usageError: false
+    });
+
+    usageStats
+      .hitUsage()
+      .then((count) => {
+        this.applyUsageCount(count);
+      })
+      .catch((error) => {
+        this.applyUsageFailure(error);
+      })
+      .finally(() => {
+        this._usageReporting = false;
+      });
   },
 
   persistState() {
@@ -923,7 +1055,7 @@ Page({
       font: scene.font,
       theme: scene.theme,
       scene: key
-    }, getSceneDelightToast(key));
+    });
   },
 
   handleRandomText() {
@@ -1032,6 +1164,123 @@ Page({
     });
   },
 
+  clearFullscreenControlsTimer() {
+    if (this._fullscreenControlsTimer) {
+      clearTimeout(this._fullscreenControlsTimer);
+      this._fullscreenControlsTimer = null;
+    }
+  },
+
+  showFullscreenControls(autoHide) {
+    this.clearFullscreenControlsTimer();
+    this.setData({ fullscreenControlsVisible: true });
+
+    if (autoHide !== false) {
+      this._fullscreenControlsTimer = setTimeout(() => {
+        this._fullscreenControlsTimer = null;
+        this.hideFullscreenControls();
+      }, FULLSCREEN_CONTROLS_HIDE_MS);
+    }
+  },
+
+  hideFullscreenControls() {
+    this.clearFullscreenControlsTimer();
+    if (!this.data.fullscreenControlsVisible) return;
+    this.setData({ fullscreenControlsVisible: false });
+  },
+
+  handleFullscreenStageTap() {
+    if (!this.data.isFullscreen || this.data.showPinchGuide) return;
+    if (this._pinchStartDistance > 0) return;
+
+    if (this.data.fullscreenControlsVisible) {
+      this.hideFullscreenControls();
+      return;
+    }
+
+    this.showFullscreenControls();
+  },
+
+  handleFullscreenBackdropTap() {
+    if (!this.data.isFullscreen) return;
+
+    if (this.data.showPinchGuide) {
+      this.dismissPinchGuide();
+      return;
+    }
+
+    this.handleFullscreenStageTap();
+  },
+
+  hideCapsuleChrome() {
+    if (typeof wx.hideHomeButton === "function") {
+      wx.hideHomeButton();
+    }
+  },
+
+  scheduleHideCapsuleChrome() {
+    this.hideCapsuleChrome();
+
+    if (this._hideCapsuleTimers) {
+      this._hideCapsuleTimers.forEach(clearTimeout);
+    }
+
+    this._hideCapsuleTimers = [120, 320, 680].map((delay) =>
+      setTimeout(() => {
+        if (this.data.isFullscreen) {
+          this.hideCapsuleChrome();
+        }
+      }, delay)
+    );
+  },
+
+  clearHideCapsuleTimers() {
+    if (!this._hideCapsuleTimers) return;
+    this._hideCapsuleTimers.forEach(clearTimeout);
+    this._hideCapsuleTimers = null;
+  },
+
+  applyFullscreenChrome() {
+    this.setData({
+      fullscreenPageStyle: FULLSCREEN_PAGE_STYLE,
+      fullscreenControlsVisible: false
+    });
+
+    if (typeof wx.setNavigationBarColor === "function") {
+      wx.setNavigationBarColor({
+        frontColor: "#ffffff",
+        backgroundColor: "#05070b",
+        animation: {
+          duration: 0,
+          timingFunc: "easeIn"
+        }
+      });
+    }
+
+    this.scheduleHideCapsuleChrome();
+  },
+
+  restoreFullscreenChrome() {
+    this.clearHideCapsuleTimers();
+    this.hideFullscreenControls();
+    this.setData({ fullscreenPageStyle: "" });
+
+    if (typeof wx.showHomeButton === "function") {
+      wx.showHomeButton();
+    }
+
+    if (typeof wx.setNavigationBarColor === "function") {
+      wx.setNavigationBarColor({
+        frontColor: "#ffffff",
+        backgroundColor: "#15161b",
+        animation: {
+          duration: 0,
+          timingFunc: "easeIn"
+        }
+      });
+    }
+  },
+
   openFullscreen() {
     if (this._fullscreenEnterTimer) {
       clearTimeout(this._fullscreenEnterTimer);
@@ -1049,6 +1298,8 @@ Page({
       { persist: false }
     );
 
+    this.applyFullscreenChrome();
+
     this._fullscreenEnterTimer = setTimeout(() => {
       this._fullscreenEnterTimer = null;
       if (this.data.isFullscreen) {
@@ -1057,9 +1308,6 @@ Page({
     }, 380);
 
     this.applyFullscreenBrightness();
-    if (typeof wx.hideHomeButton === "function") {
-      wx.hideHomeButton();
-    }
 
     if (!this.data.isKeepScreenOn) {
       wx.setKeepScreenOn({ keepScreenOn: true });
@@ -1143,6 +1391,7 @@ Page({
     }
 
     this.clearPinchGuideTimers();
+    this.restoreFullscreenChrome();
     this.setData({
       isFullscreen: false,
       isFullscreenEntering: false,
@@ -1167,7 +1416,8 @@ Page({
       nextLooping ? pickRandom(LOOP_START_TOASTS) : null,
       { persist: false, syncSliders: false }
     );
+    this.showFullscreenControls();
   },
 
-  noop() {}
+  noop() { }
 });

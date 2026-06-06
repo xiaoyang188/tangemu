@@ -1,3 +1,5 @@
+<page-meta page-style="{{fullscreenPageStyle}}" />
+
 <view class="page-shell" style="background:#0E0F12">
   <view class="device-shell">
     <view class="topbar" style="{{navLayoutStyle}}">
@@ -10,6 +12,13 @@
       <!-- <view class="topbar-actions">
         <button class="ghost-btn ghost-btn-strong" hover-class="none" bindtap="openFullscreen">进入全屏</button>
       </view> -->
+    </view>
+
+    <view class="usage-banner {{usageLoading ? 'usage-banner-syncing' : ''}} {{usagePulse ? 'usage-banner-pulse' : ''}}" bindtap="handleUsageBannerTap">
+      <view class="usage-banner-dot"></view>
+      <text wx:if="{{usageLoading || !usageText}}" class="usage-banner-text">统计同步中...</text>
+      <text wx:elif="{{usageError}}" class="usage-banner-text">点击重试同步人气统计</text>
+      <text wx:else class="usage-banner-text">已有 <text class="usage-banner-count">{{usageText}}</text> 人使用</text>
     </view>
 
     <view class="editor-stack {{previewPulsing ? 'editor-stack-pulse' : ''}}">
@@ -54,11 +63,10 @@
         </view>
       </view>
 
-      <scroll-view class="controls-scroll" scroll-y enhanced show-scrollbar="{{false}}">
       <view class="controls-panel">
-      <view class="panel-handle"></view>
+        <view class="panel-handle"></view>
 
-      <view class="control-stack">
+        <view class="control-stack">
         <view class="control-group control-group-hero">
           <view class="field field-strong">
             <view class="field-head">
@@ -215,16 +223,18 @@
           <button class="plain-link-btn" hover-class="none" bindtap="handleOpenPrivacy">隐私说明</button>
         </view> -->
 
+        </view>
       </view>
-      </view>
-      </scroll-view>
     </view>
   </view>
 
-  <view class="fullscreen-layer {{isFullscreen ? 'fullscreen-active' : ''}} {{isFullscreenEntering ? 'fullscreen-entering' : ''}}" catchtap="closeFullscreen">
+  <view class="fullscreen-layer {{isFullscreen ? 'fullscreen-active' : ''}} {{isFullscreenEntering ? 'fullscreen-entering' : ''}}" catchtap="handleFullscreenBackdropTap">
     <view class="fullscreen-shell" catchtap="noop" style="{{fullscreenShellStyle}}">
-      <button class="fullscreen-close" hover-class="fullscreen-btn-press" bindtap="closeFullscreen">退出全屏</button>
-      <button class="fullscreen-toggle" hover-class="fullscreen-btn-press" bindtap="handleToggleFullscreenLoop">{{fullscreenLoopLabel}}</button>
+      <view class="fullscreen-system-mask" aria-hidden="true"></view>
+      <view class="fullscreen-controls {{fullscreenControlsVisible ? 'fullscreen-controls-visible' : ''}}">
+        <button class="fullscreen-toggle" hover-class="fullscreen-btn-press" catchtap="handleToggleFullscreenLoop">{{fullscreenLoopLabel}}</button>
+        <button class="fullscreen-close" hover-class="fullscreen-btn-press" catchtap="closeFullscreen">退出全屏</button>
+      </view>
       <view
         wx:if="{{showPinchGuide}}"
         class="pinch-guide {{pinchGuideVisible ? 'pinch-guide-visible' : ''}}"
@@ -247,6 +257,7 @@
 
       <view
         class="fullscreen-stage"
+        bindtap="handleFullscreenStageTap"
         bindtouchstart="handleFullscreenTouchStart"
         catchtouchmove="handleFullscreenTouchMove"
         bindtouchend="handleFullscreenTouchEnd"
