@@ -1,0 +1,16 @@
+{
+  "pages": [
+    "pages/tanmu-editor/index",
+    "pages/guide/index",
+    "pages/privacy/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "弹个幕",
+    "navigationBarBackgroundColor": "#15161b",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#0a0c10",
+    "backgroundTextStyle": "light"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

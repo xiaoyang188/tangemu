@@ -1,0 +1,33 @@
+<view class="doc-page">
+  <view class="doc-hero">
+    <text class="doc-title">使用说明</text>
+    <text class="doc-copy">弹个幕是一款竖屏灯牌 / 弹幕编辑器，适合演唱会、酒吧、电竞现场等低照环境快速展示应援文案。</text>
+  </view>
+
+  <view class="doc-section">
+    <text class="doc-section-title">快速开始</text>
+    <view class="doc-list">
+      <text>1. 在首页输入或选择场景预设文案</text>
+      <text>2. 调节字体、字号、速度和配色</text>
+      <text>3. 点击全屏预览，竖屏手持展示</text>
+    </view>
+  </view>
+
+  <view class="doc-section">
+    <text class="doc-section-title">主要功能</text>
+    <view class="doc-list">
+      <text>1. 场景预设：演唱会、酒吧、电竞、告白、音乐节</text>
+      <text>2. 竖屏全屏预览，主文字自下而上滚动</text>
+      <text>3. 本地保存样式组合，支持屏幕常亮</text>
+    </view>
+  </view>
+
+  <view class="doc-section">
+    <text class="doc-section-title">使用建议</text>
+    <view class="doc-list">
+      <text>1. 现场使用时优先保证字号与对比度，确保远距离可读</text>
+      <text>2. 真机测试不同机型的字体回退与全面屏安全区</text>
+      <text>3. 正式发布前请同步查看隐私说明页</text>
+    </view>
+  </view>
+</view>

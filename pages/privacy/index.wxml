@@ -1,0 +1,31 @@
+<view class="doc-page">
+  <view class="doc-hero">
+    <text class="doc-title">隐私说明</text>
+    <text class="doc-copy">当前版本默认不接入账号体系、不上传用户输入文本，样式数据仅保存在本机本地缓存，用于你下次继续编辑和复用。</text>
+  </view>
+
+  <view class="doc-section">
+    <text class="doc-section-title">当前会使用的数据</text>
+    <view class="doc-list">
+      <text>1. 你输入的弹幕文本</text>
+      <text>2. 你选择的场景、字体、颜色、字号和速度</text>
+      <text>3. 你主动保存到“我的样式”中的本地组合</text>
+    </view>
+  </view>
+
+  <view class="doc-section">
+    <text class="doc-section-title">当前不会做的事情</text>
+    <view class="doc-list">
+      <text>1. 不会把你的文本自动上传到服务器</text>
+      <text>2. 不会在后台持续收集定位、通讯录、相册等信息</text>
+      <text>3. 不会在未说明的情况下共享你的编辑内容</text>
+    </view>
+  </view>
+
+  <view class="doc-section">
+    <text class="doc-section-title">后续如果接入新能力</text>
+    <view class="doc-list">
+      <text>如果未来接入账号、云同步、活动模板下载、图片导出或支付等能力，需要在正式发布前同步更新隐私政策与审核说明。</text>
+    </view>
+  </view>
+</view>

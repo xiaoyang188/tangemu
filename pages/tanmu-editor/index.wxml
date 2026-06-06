@@ -1,0 +1,280 @@
+<view class="page-shell" style="background:#0E0F12">
+  <view class="device-shell">
+    <view class="topbar" style="{{navLayoutStyle}}">
+      <view class="topbar-main" style="{{topbarStyle}}">
+        <view class="page-title">
+          <text class="page-title-main">弹幕</text>
+          <text class="page-title-sub">{{sceneDescription}}</text>
+        </view>
+      </view>
+      <!-- <view class="topbar-actions">
+        <button class="ghost-btn ghost-btn-strong" hover-class="none" bindtap="openFullscreen">进入全屏</button>
+      </view> -->
+    </view>
+
+    <view class="editor-stack {{previewPulsing ? 'editor-stack-pulse' : ''}}">
+      <view class="preview-section">
+        <view
+          class="preview-card {{previewPulsing ? 'preview-card-pulse' : ''}}"
+          hover-class="preview-card-press"
+          bindtap="openFullscreen"
+          style="{{previewCardStyle}}"
+        >
+        <view class="preview-badge">
+          <view class="preview-badge-dot"></view>
+          <text>{{previewBadgeCopy}}</text>
+        </view>
+
+        <!-- <view class="preview-meta">
+          <view class="meta-pill meta-pill-live">
+            <view class="meta-dot"></view>
+            <text>LIVE STAGE</text>
+          </view>
+          <view class="meta-pill">
+            <text>速度 {{speed}}s</text>
+          </view>
+        </view> -->
+
+        <view class="preview-stage">
+          <!-- <view class="ambient-track ambient-track-left" style="{{ambientLeftStyle}}">
+            {{ambientTrackText}}
+          </view> -->
+          <view class="hero-track {{previewPulsing ? 'hero-track-pulse' : ''}}" style="{{heroTrackStyle}}">
+            {{text}}
+          </view>
+          <!-- <view class="ambient-track ambient-track-right" style="{{ambientRightStyle}}">
+            {{ambientTrackText}}
+          </view> -->
+        </view>
+
+          <view class="preview-fade"></view>
+          <view class="preview-cta">
+            <text>点击上场</text>
+          </view>
+        </view>
+      </view>
+
+      <scroll-view class="controls-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+      <view class="controls-panel">
+      <view class="panel-handle"></view>
+
+      <view class="control-stack">
+        <view class="control-group control-group-hero">
+          <view class="field field-strong">
+            <view class="field-head">
+              <text class="field-label">弹幕内容</text>
+              <text class="field-value">{{textLength}} 字</text>
+            </view>
+            <input
+              class="text-input"
+              maxlength="20"
+              placeholder="输入现场口号"
+              value="{{text}}"
+              bindinput="handleTextInput"
+              cursor-spacing="18"
+            />
+          </view>
+        </view>
+
+        <view class="control-group">
+          <view class="field">
+            <view class="field-head">
+              <text class="field-label">预设样式</text>
+              <text class="field-value">一键切换</text>
+            </view>
+            <view class="preset-row">
+              <block wx:for="{{presetList}}" wx:key="key">
+                <button
+                  class="preset {{item.scene === scene ? 'preset-active' : ''}}"
+                  hover-class="preset-press"
+                  data-scene="{{item.scene}}"
+                  bindtap="handleSceneChange"
+                >
+                  {{item.label}}
+                </button>
+              </block>
+            </view>
+          </view>
+        </view>
+
+        <!-- <view class="field">
+          <view class="field-head">
+            <text class="field-label">字体选择</text>
+            <text class="field-value">{{fontLabel}}</text>
+          </view>
+          <view class="preset-row">
+            <block wx:for="{{fontList}}" wx:key="key">
+              <button
+                class="preset {{item.key === font ? 'preset-active' : ''}}"
+                hover-class="none"
+                data-font="{{item.key}}"
+                bindtap="handleFontChange"
+              >
+                {{item.label}}
+              </button>
+            </block>
+          </view>
+        </view> -->
+
+        <view class="control-group control-group-tune">
+          <view class="field field-flat">
+            <view class="slider-grid">
+              <view class="slider-cell">
+                <view class="field-head">
+                  <text class="field-label">字号</text>
+                  <text class="field-value">{{size}} px</text>
+                </view>
+                <view
+                  class="custom-slider"
+                  data-type="size"
+                  bindtap="handleSliderTap"
+                  bindtouchstart="handleSliderTouchStart"
+                  bindtouchmove="handleSliderTouchMove"
+                  bindtouchend="handleSliderTouchEnd"
+                >
+                  <view class="custom-slider-track size-slider-track"></view>
+                  <view class="custom-slider-thumb" style="{{sizeSliderThumbStyle}}"></view>
+                </view>
+              </view>
+
+              <view class="slider-cell">
+                <view class="field-head">
+                  <text class="field-label">滚动速度</text>
+                  <text class="field-value">{{speed}} s</text>
+                </view>
+                <view
+                  class="custom-slider"
+                  data-type="speed"
+                  bindtap="handleSliderTap"
+                  bindtouchstart="handleSliderTouchStart"
+                  bindtouchmove="handleSliderTouchMove"
+                  bindtouchend="handleSliderTouchEnd"
+                >
+                  <view class="custom-slider-track speed-slider-track"></view>
+                  <view class="custom-slider-thumb" style="{{speedSliderThumbStyle}}"></view>
+                </view>
+              </view>
+            </view>
+          </view>
+
+          <view class="field field-compact">
+            <view class="field-head">
+              <text class="field-label">荧光配色</text>
+              <text class="field-value">点击切换</text>
+            </view>
+            <view class="palette">
+              <block wx:for="{{palette}}" wx:key="key">
+                <button
+                  class="chip {{item.key === color ? 'chip-active' : ''}}"
+                  hover-class="chip-press"
+                  aria-label="{{item.key}}"
+                  data-color="{{item.key}}"
+                  bindtap="handleColorChange"
+                  style="background: {{item.value}};"
+                ></button>
+              </block>
+            </view>
+          </view>
+        </view>
+
+        <!-- <view class="field">
+          <view class="field-head">
+            <text class="field-label">我的样式</text>
+            <text class="field-value">最多 6 组</text>
+          </view>
+
+          <view wx:if="{{savedStyleCards.length}}" class="saved-style-list">
+            <block wx:for="{{savedStyleCards}}" wx:key="id">
+              <view class="saved-style-card">
+                <view class="saved-style-head">
+                  <view class="saved-style-accent" style="background: {{item.colorValue}};"></view>
+                  <view class="saved-style-copy" data-index="{{index}}" bindtap="handleUseSavedStyle">
+                    <text class="saved-style-name">{{item.name}}</text>
+                    <text class="saved-style-meta">{{item.sceneLabel}} · {{item.fontLabel}}</text>
+                    <text class="saved-style-text">{{item.text}}</text>
+                  </view>
+                  <button class="saved-style-delete" hover-class="none" data-index="{{index}}" bindtap="handleDeleteSavedStyle">删</button>
+                </view>
+              </view>
+            </block>
+          </view>
+
+          <view wx:else class="empty-state">
+            <text>还没有保存的样式，调好后点“保存当前样式”即可复用。</text>
+          </view>
+        </view> -->
+
+        <view class="action-row">
+          <button class="action-btn" hover-class="action-btn-press" bindtap="handleSaveStyle">保存当前样式</button>
+          <button class="action-btn action-btn-primary" hover-class="action-btn-press" bindtap="openFullscreen">全屏预览</button>
+        </view>
+
+        <!-- <view class="secondary-actions">
+          <button class="plain-link-btn" hover-class="none" bindtap="handleResetCurrent">恢复默认场景</button>
+          <button class="plain-link-btn" hover-class="none" bindtap="handleOpenGuide">使用说明</button>
+          <button class="plain-link-btn" hover-class="none" bindtap="handleOpenPrivacy">隐私说明</button>
+        </view> -->
+
+      </view>
+      </view>
+      </scroll-view>
+    </view>
+  </view>
+
+  <view class="fullscreen-layer {{isFullscreen ? 'fullscreen-active' : ''}} {{isFullscreenEntering ? 'fullscreen-entering' : ''}}" catchtap="closeFullscreen">
+    <view class="fullscreen-shell" catchtap="noop" style="{{fullscreenShellStyle}}">
+      <button class="fullscreen-close" hover-class="fullscreen-btn-press" bindtap="closeFullscreen">退出全屏</button>
+      <button class="fullscreen-toggle" hover-class="fullscreen-btn-press" bindtap="handleToggleFullscreenLoop">{{fullscreenLoopLabel}}</button>
+      <view
+        wx:if="{{showPinchGuide}}"
+        class="pinch-guide {{pinchGuideVisible ? 'pinch-guide-visible' : ''}}"
+        catchtap="dismissPinchGuide"
+      >
+        <view class="pinch-guide-card" catchtap="noop">
+          <view class="pinch-guide-stage" aria-hidden="true">
+            <view class="pinch-guide-ring pinch-guide-ring-outer"></view>
+            <view class="pinch-guide-ring pinch-guide-ring-inner"></view>
+            <view class="pinch-finger pinch-finger-left"></view>
+            <view class="pinch-finger pinch-finger-right"></view>
+            <view class="pinch-guide-spread pinch-guide-spread-left"></view>
+            <view class="pinch-guide-spread pinch-guide-spread-right"></view>
+          </view>
+          <text class="pinch-guide-title">双指捏合缩放字号</text>
+          <text class="pinch-guide-sub">分开放大 · 捏合缩小</text>
+          <text class="pinch-guide-hint">点击任意处关闭</text>
+        </view>
+      </view>
+
+      <view
+        class="fullscreen-stage"
+        bindtouchstart="handleFullscreenTouchStart"
+        catchtouchmove="handleFullscreenTouchMove"
+        bindtouchend="handleFullscreenTouchEnd"
+        bindtouchcancel="handleFullscreenTouchEnd"
+      >
+        <view
+          wx:if="{{isFullscreenLooping}}"
+          class="fullscreen-loop-track fullscreen-looping"
+          style="{{fullLoopTrackStyle}}"
+        >
+          <view class="fullscreen-loop-unit" style="gap:{{fullscreenLoopGapRpx}}rpx">
+            <block wx:for="{{fullGlyphs}}" wx:key="index">
+              <text class="fullscreen-glyph" style="{{fullGlyphStyle}}">{{item}}</text>
+            </block>
+          </view>
+          <view class="fullscreen-loop-spacer" style="height:{{fullscreenLoopSpacerRpx}}rpx"></view>
+          <view class="fullscreen-loop-unit" style="gap:{{fullscreenLoopGapRpx}}rpx">
+            <block wx:for="{{fullGlyphs}}" wx:for-index="gIndex" wx:key="gIndex">
+              <text class="fullscreen-glyph" style="{{fullGlyphStyle}}">{{item}}</text>
+            </block>
+          </view>
+        </view>
+        <view wx:else class="fullscreen-text-wrap" style="{{fullTextWrapStyle}}">
+          <block wx:for="{{fullGlyphs}}" wx:key="index">
+            <text class="fullscreen-glyph" style="{{fullGlyphStyle}}">{{item}}</text>
+          </block>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>
